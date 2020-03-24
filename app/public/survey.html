@@ -160,12 +160,144 @@
                 <option value="4">4</option>
                 <option value="5">5 (Strongly Agree)</option>
                 </select>
-                <br><br>
+                <br>
+
+            <button type="submit" class="mt-3 btn btn-primary btn-lg btn-block" id="submit"><i class="fa fa-check-circle" aria-hidden="trun"></i>Submit</button>
 
             </div>
 
         </div>
 
+        <hr>
+
+        <div class="row">
+            <div class="col-md-12">
+                    <h5><a href="/api/friends" target="_blank">API Friends List </a> | <a href="https://github.com/swazeyjessup/friend-finder" target="_blank">GitHub Repo</a></h5>
+            </div>
+        </div>
+
     </div>
+
+    <div class="modal fade" id="results-modal">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2 class="modal-title m-auto">Best Match for Friend</h2>
+            </div>
+
+            <div class="modal-body">
+                <h2 id="match-name"></h2>
+                <img id="match-photo_url" src="ttp://getdrawings.com/img/silhouette-avatar-12.png" alt="Image of the Best Match for Friend">
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger m-auto" data-dismiss="modal">Close</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            submitButtonPressClickListener();
+        });
+
+        function isUserInfoInputFilledIn(){
+            var name = $("#name").val();
+            var photo_url = $("#photo_url").val();
+            if (!name || !photo_url) {
+                return false;
+            }
+            return true;
+        }
+
+        function clearUserInfoInputs() {
+            $("#name").val("");
+            $("#photo_url").val("");
+        }
+
+        function isSurveyFilledIn() {
+            for(var i = 1; i < 11; i++) {
+                var id = "#question-" + i;
+                if (!$(id).val()){
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function clearSurvey() {
+            for(var i = 1; i < 11; i++) {
+                var id = "#question-" + i;
+                $(id).val("");
+            }
+        }
+
+        function alertUser(message) {
+            alert(message);
+        }
+
+        function getSurveyData() {
+            var scores = [];
+            for (var i = 1; i < 11; i++) {
+                var id = "#question-" + i;
+                if ($(id).val().includes("1") || $(id).val().includes("5")){
+                    scores.push($(id).val()[0]);
+                }else {
+                    scores.push($(id).val());
+                }
+            }
+            return scores;
+        }
+
+        function getUserData() {
+            var userData = {};
+            userData["name"] = $("#name").val();
+            userData["photo_url"] = $("photo_url").val();
+            userData["scores"] = getSurveyData();
+            return userData;
+        }
+
+        function postUserDataToServer() {
+            $.ajax({
+                method: "POST",
+                url: "/api/friends",
+                data: getUserData(),
+                success: function(result) {
+                    console.log(result);
+                    $("#match-name").text(result.name);
+                    $("#match-phote_url").attr("src", result.photo_url);
+
+                    $("#result-modal").modal("toggle");
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Sorry, invalid request.");
+                    console.log("textStatus: " + textStatus + " errorThrown: " + errorThrown);
+                }
+            });
+        }
+
+        function submitButtonPressClickListener(){
+            $("#submit").on("click", function(event){
+                event.preventDefault();
+                if (!isUserInfoInputFilledIn() && !isSurveyFilledIn()) {
+                    alertUser("Please fill out your personal info and answer the survey questions before submitting the form.");
+                } else if (!isUserInfoInputFilledIn()) {
+                    alertUser("Please fill out your personal info before submitting the form.")
+                } else if (!isSurveyFilledIn()) {
+                    alertUser("Please answer the survey questions before submitting the form.")
+                } else {
+                    postUserDataToServer();
+                    clearUserInfoInputs();
+                    clearSurvey();
+                }
+            });
+        }
+
+
+    </script>
+
+
 </body>
 </html>
